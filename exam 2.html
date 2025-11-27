@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Online Scholarship Entry Exam</title>
+<style>
+    body {font-family: Arial; margin:0; padding:0; background: linear-gradient(to bottom right,#008cff,#00d4ff); transition: background 0.5s;}
+    #container {width:70%; margin:auto; background: rgba(255,255,255,0.95); padding:20px; border-radius:12px; margin-top:40px; box-shadow:0 0 20px rgba(0,0,0,0.2);}
+    h1,h2 {text-align:center;}
+    button {display:block; width:220px; margin:20px auto; padding:12px; background:#0048ff; color:white; border:none; border-radius:5px; cursor:pointer; font-size:16px; transition:0.3s;}
+    button:hover {background:#002db3;}
+    #instructions, #questionBox, #result {display:none;}
+    .progress-bar {width:100%; background:#ddd; height:20px; border-radius:10px; margin-bottom:10px;}
+    .progress {background:#00c900; width:0%; height:100%; border-radius:10px;}
+    .timer {font-size:20px; font-weight:bold; text-align:center; color:#d10000;}
+    .option {margin:8px 0; font-size:18px;}
+    .dark-mode {background: rgba(20,20,20,0.95) !important; color:white !important;}
+    body.dark-bg {background: linear-gradient(to bottom right,#000000,#333333);}
+</style>
+</head>
+<body>
+<div id="container">
+
+<!-- Page 1: Welcome Message -->
+<div id="welcome">
+    <h1>Welcome to the Online Scholarship Entry Exam!</h1>
+    <p style="text-align:center; font-size:18px;">
+        Congratulations on reaching this stage! This exam is your opportunity to demonstrate your knowledge, skills, and readiness for the scholarship.  
+        Stay calm, read each question carefully, and give your best effort. Remember, focus and honesty are key to success!
+    </p>
+    <button id="toInstructions">Proceed to Instructions</button>
+</div>
+
+<!-- Page 2: Instructions -->
+<div id="instructions">
+    <h2>Exam Instructions</h2>
+    <p>
+        ✔ You have <b>60 seconds</b> for each question.<br>
+        ✔ Do NOT refresh the page once the exam starts.<br>
+        ✔ A progress bar shows exam completion.<br>
+        ✔ You will hear a sound at 10 seconds remaining.<br>
+        ✔ Auto submission happens when time runs out.<br>
+        ✔ Each question carries <b>2 marks</b>.
+    </p>
+    <button id="startBtn">Start Exam</button>
+</div>
+
+<!-- Page 3: Questions -->
+<div id="questionBox">
+    <div class="timer">Time Left: <span id="time">60</span> seconds</div>
+    <div class="progress-bar"><div class="progress" id="progress"></div></div>
+    <h2 id="questionText"></h2>
+    <div id="options"></div>
+    <button id="nextBtn">Next Question</button>
+    <button id="submitBtn" style="display:none;">Submit Exam</button>
+</div>
+
+<!-- Result -->
+<div id="result"></div>
+</div>
+
+<!-- Sounds -->
+<audio id="warningSound"><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+<audio id="endSound"><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+// ==========================================================================
+// FULL 50 QUESTIONS (40 original + 10 new)
+// ==========================================================================
+
+let questions = [
+
+/* ----------------- Original 40 questions ------------------ */
+{q:"The Calvin cycle occurs in the:", a:"Stroma of chloroplasts", o:["Cytoplasm","Thylakoid membrane","Stroma of chloroplasts","Mitochondrial matrix"]},
+{q:"Action potential propagation depends on:", a:"Sodium and potassium ion movements", o:["Only sodium channels","Calcium pump inhibition","Sodium and potassium ion movements","Only potassium channels"]},
+{q:"Telomeres function to:", a:"Protect chromosome ends", o:["Store information","Protect chromosome ends","Increase transcription","Build ribosomes"]},
+{q:"Transcription initiation begins when:", a:"RNA polymerase binds to promoter", o:["tRNA binds ribosome","RNA polymerase binds to promoter","Helicase forms fork","DNA polymerase binds mRNA"]},
+{q:"Allosteric regulation affects enzymes by:", a:"Binding at another site", o:["Destroying active sites","Binding at another site","Increasing substrate","Breaking peptide bonds"]},
+{q:"The phospholipid bilayer mainly:", a:"Provides selective permeability", o:["Produces energy","Selective permeability","Protein synthesis","Breaks toxins"]},
+{q:"Evidence for the endosymbiotic theory:", a:"Chloroplasts divide like bacteria", o:["Mitochondria lack DNA","Chloroplasts divide like bacteria","No ribosomes in mitochondria","All cells have mitochondria"]},
+{q:"Innate immunity is:", a:"Present from birth", o:["Slow","Targets antigens","Present from birth","Creates memory cells"]},
+{q:"DNA polymerase III:", a:"Extends DNA strand", o:["Seals fragments","Starts primers","Extends DNA strand","Unwinds DNA"]},
+{q:"Genetic drift strongly affects:", a:"Small populations", o:["Large populations","Only dominant traits","Small populations","Only recessive alleles"]},
+{q:"Anaesthesia is defined as:", a:"Loss of sensation", o:["Paralysis","Loss of sensation","Loss of memory","Low BP"]},
+{q:"Main types of anaesthesia:", a:"General, local, regional", o:["IV/oral/inhaled","General, local, regional","Light/moderate/heavy","Deep/partial/awake"]},
+{q:"Purpose of preoperative assessment:", a:"Identify risks", o:["Increase anxiety","Identify risks","Set surgery time","Train surgeon"]},
+{q:"Oxygen saturation is measured using:", a:"Pulse oximeter", o:["Thermometer","Glucometer","Pulse oximeter","BP cuff"]},
+{q:"Common inhalational agent:", a:"Isoflurane", o:["Paracetamol","Isoflurane","Insulin","Atropine"]},
+{q:"Lidocaine is a:", a:"Local anaesthetic", o:["Muscle relaxant","Local anaesthetic","Antibiotic","Anticoagulant"]},
+{q:"Local anaesthesia works by:", a:"Blocking nerve conduction", o:["Lowering sugar","Blocking nerve conduction","Increasing flow","Stimulating brain"]},
+{q:"Fasting before general anaesthesia prevents:", a:"Aspiration", o:["Kidney failure","Infection","Aspiration","Bleeding"]},
+{q:"Function of an endotracheal tube:", a:"Maintain airway", o:["Give fluids","Maintain airway","Monitor heart","Remove stomach acid"]},
+{q:"Common complication of anaesthesia:", a:"Nausea/vomiting", o:["Hair growth","Weight gain","Improved vision","Nausea/vomiting"]},
+{q:"mRNA carries genetic information from:", a:"DNA to ribosome", o:["RNA to DNA","DNA to ribosome","Protein to DNA","Nucleus to skin"]},
+{q:"The basic unit of life is the:", a:"Cell", o:["Atom","Cell","Tissue","Organ"]},
+{q:"ATP is produced during:", a:"Aerobic respiration", o:["Fermentation","Anaerobic respiration","Glycolysis","Aerobic respiration"]},
+{q:"Xylem mainly transports:", a:"Water and minerals", o:["Sugars","Hormones","Water and minerals","Proteins"]},
+{q:"Hemoglobin is a:", a:"Protein", o:["Lipid","Protein","Carbohydrate","Nucleic acid"]},
+{q:"Water is a good solvent because:", a:"It is polar", o:["It is heavy","It is polar","It has low boiling point","It is dry"]},
+{q:"Atomic number represents:", a:"Number of protons", o:["Protons","Neutrons","Electrons","Mass number"]},
+{q:"A solution with pH 2 is:", a:"Strong acid", o:["Neutral","Weak acid","Strong acid","Base"]},
+{q:"Enzymes are made of:", a:"Proteins", o:["Lipids","Carbohydrates","Proteins","Vitamins"]},
+{q:"Cell membrane structure is described by:", a:"Fluid mosaic model", o:["Rigid wall model","Sheet model","Fluid mosaic model","Hard shell model"]},
+{q:"Which is NOT an element?", a:"Water", o:["Carbon","Hydrogen","Water","Oxygen"]},
+{q:"Chlorophyll absorbs mostly:", a:"Red and blue light", o:["Green","Red and blue light","Yellow","UV"]},
+{q:"Chemical formula of glucose:", a:"C6H12O6", o:["CO2","H2O","NaCl","C6H12O6"]},
+{q:"DNA backbone is made of:", a:"Sugar-phosphate", o:["Protein","Sugar-phosphate","Lipids","Water"]},
+{q:"Mitosis produces:", a:"Identical cells", o:["Gametes","Mutated cells","Identical cells","Haploid cells"]},
+{q:"Proteins are made from:", a:"Amino acids", o:["Fatty acids","Sugars","Amino acids","Nucleotides"]},
+{q:"Strongest chemical bond:", a:"Covalent bond", o:["Ionic","Covalent","Hydrogen","Metallic"]},
+{q:"Cellular respiration occurs in the:", a:"Mitochondria", o:["Nucleus","Chloroplast","Mitochondria","Cytoplasm"]},
+{q:"Carbohydrates mainly store:", a:"Energy", o:["Salt","Energy","DNA","Heat"]},
+{q:"Neutral pH value is:", a:"7", o:["1","5","7","10"]},
+
+/* ----------------- Additional 10 hard questions ------------------ */
+{q:"Which element has the highest electronegativity?", a:"Fluorine", o:["Oxygen","Fluorine","Chlorine","Nitrogen"]},
+{q:"What is the main product of glycolysis?", a:"Pyruvate", o:["Glucose","Pyruvate","ATP","Lactate"]},
+{q:"Which organelle produces most ATP?", a:"Mitochondria", o:["Ribosome","Mitochondria","Chloroplast","Nucleus"]},
+{q:"Which process is photosynthesis?", a:"Light-dependent and light-independent reactions", o:["Respiration","Light-dependent and light-independent reactions","Fermentation","Transpiration"]},
+{q:"Which bond stabilizes protein structure?", a:"Hydrogen bond", o:["Ionic bond","Hydrogen bond","Covalent bond","Van der Waals forces"]},
+{q:"pH of a neutral solution at 25°C?", a:"7", o:["0","7","14","1"]},
+{q:"Strongest type of chemical bond?", a:"Covalent bond", o:["Ionic bond","Covalent bond","Hydrogen bond","Van der Waals"]},
+{q:"Which macromolecule stores genetic information?", a:"DNA", o:["RNA","Protein","DNA","Carbohydrate"]},
+{q:"Major product of the Krebs cycle?", a:"NADH and FADH2", o:["Pyruvate","NADH and FADH2","Glucose","ATP"]},
+{q:"Which gas is released during photosynthesis?", a:"Oxygen", o:["Carbon dioxide","Oxygen","Nitrogen","Hydrogen"]}
+
+];
+
+// ==========================================================================
+// EXAM LOGIC
+// ==========================================================================
+
+let index = 0, score = 0, timeLeft = 60, timer;
+const warningSound = document.getElementById("warningSound");
+const endSound = document.getElementById("endSound");
+const welcomeDiv = document.getElementById("welcome");
+const instructionsDiv = document.getElementById("instructions");
+const qBox = document.getElementById("questionBox");
+const qText = document.getElementById("questionText");
+const optionsDiv = document.getElementById("options");
+const timeSpan = document.getElementById("time");
+const progress = document.getElementById("progress");
+
+document.getElementById("toInstructions").onclick = function() {
+    welcomeDiv.style.display = "none";
+    instructionsDiv.style.display = "block";
+};
+document.getElementById("startBtn").onclick = function() {
+    instructionsDiv.style.display = "none";
+    qBox.style.display = "block";
+    loadQuestion();
+};
+
+function loadQuestion(){
+    let q = questions[index];
+    qText.innerHTML = (index+1)+". "+q.q;
+    optionsDiv.innerHTML = "";
+    q.o.forEach(o=>{
+        optionsDiv.innerHTML += `<div class='option'><input type='radio' name='opt' value='${o}'> ${o}</div>`;
+    });
+    updateProgress();
+    resetTimer();
+}
+
+function resetTimer(){
+    clearInterval(timer);
+    timeLeft = 60;
+    timeSpan.innerHTML = timeLeft;
+    timer = setInterval(()=>{
+        timeLeft--;
+        timeSpan.innerHTML = timeLeft;
+        if(timeLeft===10) warningSound.play();
+        if(timeLeft<=0) { endSound.play(); nextQuestion(); }
+    },1000);
+}
+
+function nextQuestion(){
+    checkAnswer();
+    index++;
+    if(index<questions.length){ loadQuestion(); }
+    else{ endExam(); }
+}
+
+function checkAnswer(){
+    let opts=document.getElementsByName("opt");
+    opts.forEach(o=>{ if(o.checked && o.value===questions[index].a) score+=2; });
+}
+
+document.getElementById("nextBtn").onclick=function(){
+    if(index===questions.length-1){
+        document.getElementById("nextBtn").style.display="none";
+        document.getElementById("submitBtn").style.display="block";
+    }
+    nextQuestion();
+};
+document.getElementById("submitBtn").onclick=endExam;
+
+function updateProgress(){
+    let percent=((index)/questions.length)*100;
+    progress.style.width=percent+"%";
+}
+
+function endExam(){
+    clearInterval(timer);
+    qBox.style.display="none";
+    let total=questions.length*2;
+    document.getElementById("result").style.display="block";
+    document.getElementById("result").innerHTML="Your Score: "+score+" / "+total+"<br>Percentage: "+Math.round((score/total)*100)+"%";
+}
+
+// Theme toggle
+document.getElementById("container").insertAdjacentHTML("beforeend","<button id='themeBtn'>Toggle Light/Dark Theme</button>");
+document.getElementById("themeBtn").onclick=function(){
+    document.getElementById("container").classList.toggle("dark-mode");
+    document.body.classList.toggle("dark-bg");
+};
+
+});
+</script>
+</body>
+</html>
